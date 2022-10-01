@@ -38,7 +38,7 @@ SerialInterface* SerialInterface::createSerialInterface( const std::string& port
 #ifdef _WIN32
 	serialInterface = new SerialInterfaceWindows( portName, baudRate, errorMessage );
 #else
-	serialInterface = new SerialInterfacePOSIX( portName, errorMessage );
+	serialInterface = new SerialInterfacePOSIX( portName, baudRate, errorMessage );
 #endif
 
 	// If the interface couldn't be open properly, delete it

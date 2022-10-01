@@ -36,14 +36,69 @@
 
 #include <errno.h>  
 
+#ifndef _WIN32
+namespace
+{
+	unsigned int baud2speed_t(unsigned int baud)
+	{
+		unsigned int value = B9600;
+		switch(baud)
+		{
+			case 50:
+				value = B50;
+				break;
+			case 75:
+				value = B75;
+				break;
+			case 110:
+				value = B110;
+				break;
+			case 134:
+				value = B134;
+				break;
+			case 150:
+				value = B150;
+				break;
+			case 200:
+				value = B200;
+				break;
+			case 300:
+				value = B300;
+				break;
+			case 600:
+				value = B600;
+				break;
+			case 1200:
+				value = B1200;
+				break;
+			case 1800:
+				value = B1800;
+				break;
+			case 2400:
+				value = B2400;
+				break;
+			case 4800:
+				value = B4800;
+				break;
+			case 19200:
+				value = B19200;
+				break;
+			case 38400:
+				value = B38400;
+				break;
+		}
+		return value;
+	}
+}
+#endif
 namespace RPM
 {
 
-SerialInterfacePOSIX::SerialInterfacePOSIX( const std::string& portName, std::string* errorMessage )
+SerialInterfacePOSIX::SerialInterfacePOSIX( const std::string& portName, unsigned int baudRate, std::string* errorMessage )
 	:	SerialInterface(),
 		mFileDescriptor(-1)
 {
-	mFileDescriptor = openPort( portName, errorMessage );
+	mFileDescriptor = openPort( portName, baudRate, errorMessage );
 }
 
 SerialInterfacePOSIX::~SerialInterfacePOSIX()
@@ -63,7 +118,7 @@ bool SerialInterfacePOSIX::isOpen() const
 	return mFileDescriptor!=-1;
 }
 
-int SerialInterfacePOSIX::openPort( const std::string& portName, std::string* errorMessage )
+int SerialInterfacePOSIX::openPort( const std::string& portName, unsigned int baudRate, std::string* errorMessage )
 {
 	int fd = open( portName.c_str(), O_RDWR | O_NOCTTY );
 	if (fd == -1)
@@ -81,6 +136,16 @@ int SerialInterfacePOSIX::openPort( const std::string& portName, std::string* er
 #ifndef _WIN32
 	struct termios options;
 	tcgetattr(fd, &options);
+	const unsigned int spd = baud2speed_t(baudRate);
+	int rc1 = cfsetospeed(&options, spd);
+	int rc2 = cfsetispeed(&options, spd);
+	if ((rc1 | rc2) != 0 && errorMessage)
+	{
+		std::stringstream stream;
+		stream << "Failed to set speed " << baudRate << " on serial port \"" << portName << "\". ";
+		stream << strerror(errno);
+		*errorMessage = stream.str();
+	}
 	options.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 	options.c_oflag &= ~(ONLCR | OCRNL);
 	tcsetattr(fd, TCSANOW, &options);

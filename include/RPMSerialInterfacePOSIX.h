@@ -36,14 +36,14 @@ public:
 	// - on Windows: "\\\\.\\USBSER000", "\\\\.\\COM6", etc... 
 	// - on Linux: "/dev/ttyACM0"
 	// - on Mac OS: "/dev/cu.usbmodem00034567"
-	SerialInterfacePOSIX( const std::string& portName, std::string* errorMessage=NULL );
+	SerialInterfacePOSIX( const std::string& portName, unsigned int baudRate, std::string* errorMessage=NULL );
 
 	virtual ~SerialInterfacePOSIX();
 
 	virtual bool isOpen() const;
 
 private:
-	int openPort( const std::string& portName, std::string* errorMessage=NULL );
+	int openPort( const std::string& portName, unsigned int baudRate, std::string* errorMessage=NULL );
 	
 	virtual bool writeBytes( const unsigned char* data, unsigned int dataSizeInBytes );
 	virtual bool readBytes( unsigned char* data, unsigned int dataSizeInBytes );
